@@ -2,7 +2,6 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# VPC
 resource "aws_vpc" "prac_vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -10,7 +9,6 @@ resource "aws_vpc" "prac_vpc" {
   }
 }
 
-# Subnet
 resource "aws_subnet" "terra_subnet" {
   vpc_id                  = aws_vpc.prac_vpc.id
   cidr_block              = "10.0.0.0/24"
@@ -21,7 +19,6 @@ resource "aws_subnet" "terra_subnet" {
   }
 }
 
-# Internet Gateway
 resource "aws_internet_gateway" "terra_igw" {
   vpc_id = aws_vpc.prac_vpc.id
   tags = {
@@ -29,10 +26,8 @@ resource "aws_internet_gateway" "terra_igw" {
   }
 }
 
-# Route Table
 resource "aws_route_table" "terra_route_table" {
   vpc_id = aws_vpc.prac_vpc.id
-
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.terra_igw.id
@@ -43,13 +38,11 @@ resource "aws_route_table" "terra_route_table" {
   }
 }
 
-# Route Table Association
 resource "aws_route_table_association" "terra_rta" {
   subnet_id      = aws_subnet.terra_subnet.id
   route_table_id = aws_route_table.terra_route_table.id
 }
 
-# Security Group
 resource "aws_security_group" "terra_sg" {
   name        = "Terra_SG"
   description = "Allow SSH, HTTP, and HTTPS"
@@ -88,7 +81,6 @@ resource "aws_security_group" "terra_sg" {
   }
 }
 
-# S3 Bucket
 resource "aws_s3_bucket" "bg_s3_prac" {
   bucket = "bg-s3-prac"
 
@@ -98,7 +90,7 @@ resource "aws_s3_bucket" "bg_s3_prac" {
 }
 
 resource "aws_s3_bucket_versioning" "bg_s3_prac_versioning" {
-  bucket = aws_s3_bucket.bg_s3_prac.id
+ _s3_bucket.bg_s3_prac.id
 
   versioning_configuration {
     status = "Enabled"
@@ -114,7 +106,6 @@ resource "aws_s3_bucket_public_access_block" "bg_s3_prac_block" {
   restrict_public_buckets = true
 }
 
-# EC2 Instance
 resource "aws_instance" "prac_ins" {
   ami           = "ami-02d26659fd82cf299"
   instance_type = "t3.micro"
