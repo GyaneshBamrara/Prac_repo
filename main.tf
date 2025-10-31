@@ -90,11 +90,12 @@ resource "aws_security_group" "terra_sg" {
 
 # S3 Bucket
 resource "aws_s3_bucket" "bg_s3_prac" {
-  bucket = "bg-s3-prac"
-
-  tags = {
+   tags = {
     Name = "bg-s3-prac"
- _versioning" "bg_s3_prac_versioning" {
+  }
+}
+
+resource "aws_s3_bucket_versioning" "bg_s3_prac_versioning" {
   bucket = aws_s3_bucket.bg_s3_prac.id
 
   versioning_configuration {
