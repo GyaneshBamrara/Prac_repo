@@ -89,8 +89,7 @@ resource "aws_security_group" "terra_sg" {
 }
 
 # S3 Bucket
-resource "aws_s3_bucket" "bg_s3_prac" {
-  bucket = "bg-s3-prac"
+resource bucket = "bg-s3-prac"
 
   tags = {
     Name = "bg-s3-prac"
@@ -110,7 +109,8 @@ resource "aws_s3_bucket_public_access_block" "bg_s3_prac_block" {
 
   block_public_acls       = true
   block_public_policy     = true
-  true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # EC2 Instance
