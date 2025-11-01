@@ -140,9 +140,7 @@ resource "aws_security_group" "terra_sg" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -160,11 +158,7 @@ resource "aws_instance" "terraform_ins" {
   associate_public_ip_address = true
   key_name                    = var.key_name
 
- .instance_name
-  }
-}
-
-# ELASTIC IP
+ 
 resource "aws_eip" "terra_eip" {
   domain = "vpc"
 
