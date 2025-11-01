@@ -3,57 +3,55 @@ provider "aws" {
 }
 
 # VPC
-resource "aws_vpc" "prac_vpc" {
+resource "aws_vpc" "gyanesh_vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "Prac_VPC"
+    Name = "gyanesh-vpc"
   }
 }
 
 # Subnet
-resource "aws_subnet" "terra_subnet" {
-  vpc_id                  = aws_vpc.prac_vpc.id
-  cidr_block              = "10.0.0.0/24"
+resource "aws_subnet" "gyanesh_subnet" {
+  vpc_id                  = aws_vpc.gyanesh_vpc.id
+  cidr_block              = "10.0.1.0/24"
   availability_zone       = "ap-south-1a"
   map_public_ip_on_launch = true
   tags = {
-    Name = "Terra_subnet"
+    Name = "gyanesh-public-subnet"
   }
 }
 
 # Internet Gateway
-resource "aws_internet_gateway" "terra_igw" {
-  vpc_id = aws_vpc.prac_vpc.id
+resource "aws_internet_gateway" "gyanesh_igw" {
+  vpc_id = aws_vpc.gyanesh_vpc.id
   tags = {
-    Name = "Terra_IGW"
+    Name = "gyanesh-igw"
   }
 }
 
 # Route Table
-resource "aws_route_table" "terra_route_table" {
-  vpc_id = aws_vpc.prac_vpc.id
-
+resource "aws_route_table" "gyanesh_rt" {
+  vpc_id = aws_vpc.gyanesh_vpc.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.terra_igw.id
+    gateway_id = aws_internet_gateway.gyanesh_igw.id
   }
-
   tags = {
-    Name = "Terra_Route_Table"
+    Name = "gyanesh-public-rt"
   }
 }
 
 # Route Table Association
-resource "aws_route_table_association" "terra_rta" {
-  subnet_id      = aws_subnet.terra_subnet.id
-  route_table_id = aws_route_table.terra_route_table.id
+resource "aws_route_table_association" "gyanesh_rta" {
+  subnet_id      = aws_subnet.gyanesh_subnet.id
+  route_table_id = aws_route_table.gyanesh_rt.id
 }
 
 # Security Group
-resource "aws_security_group" "terra_sg" {
-  name        = "Terra_SG"
-  description = "Allow SSH, HTTP, and HTTPS"
-  vpc_id      = aws_vpc.prac_vpc.id
+resource "aws_security_group" "gyanesh_sg" {
+  name        = "gyanesh-sg"
+  description = "Allow SSH and HTTP"
+  vpc_id      = aws_vpc.gyanesh_vpc.id
 
   ingress {
     from_port   = 22
@@ -69,13 +67,6 @@ resource "aws_security_group" "terra_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -84,43 +75,54 @@ resource "aws_security_group" "terra_sg" {
   }
 
   tags = {
-    Name = "Terra_SG"
+    Name = "gyanesh-sg"
+  }
+}
+
+# Elastic IP
+resource "aws_eip" "gyanesh_eip" {
+  instance = aws_instance.gyanesh_instance.id
+  vpc      = true
+ "
+  }
+}
+
+# EC2 Instance
+resource "aws_instance" "gyanesh_instance" {
+  ami                         = "ami-02b8269d5e85954ef"
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.gyanesh_subnet.id
+  vpc_security_group_ids      = [aws_security_group.gyanesh_sg.id]
+  associate_public_ip_address = true
+  key_name                    = "TerraAss"
+
+  tags = {
+    Name = "gyanesh-ec2-instance"
   }
 }
 
 # S3 Bucket
-resource "aws_s3_bucket" "bg_s3_prac" {
-   tags = {
-    Name = "bg-s3-prac"
-  }
+resource "random_id" "rand" {
+  byte_length = 4
 }
 
-resource "aws_s3_bucket_versioning" "bg_s3_prac_versioning" {
-  bucket = aws_s3_bucket.bg_s3_prac.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "bg_s3_prac_block" {
-  bucket = aws_s3_bucket.bg_s3_prac.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# EC2 Instance
-resource "aws_instance" "prac_ins" {
-  ami           = "ami-02d26659fd82cf299"
-  instance_type = "t3.micro"
-  subnet_id     = aws_subnet.terra_subnet.id
-  key_name      = "KeyTer.pem"
-  security_groups = [aws_security_group.terra_sg.name]
-
+aws_s3_bucket" "gyanesh_bucket" {
+  bucket = "gyanesh-terraform-bucket-${random_id.rand.hex}"
   tags = {
-    Name = "Prac_ins"
+    Name        = "gyanesh-terraform-bucket"
+    Environment = "Dev"
   }
+}
+
+# Outputs
+output "ec2_public_ip" {
+  value = aws_instance.gyanesh_instance.public_ip
+}
+
+output "s3_bucket_name" {
+  value = aws_s3_bucket.gyanesh_bucket.bucket
+}
+
+output "elastic_ip" {
+  value = aws_eip.gyanesh_eip.public_ip
 }
