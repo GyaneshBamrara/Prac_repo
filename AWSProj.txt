@@ -1,0 +1,99 @@
+Perfect — let’s add an AWS RDS (database instance) to your Terraform setup inside your existing VPC and subnet.
+
+Below is a safe and clear Terraform snippet for creating an RDS MySQL database inside your existing VPC (vpc-08b07fd328e7c8973) and subnet (terra-gyanesh-subnet-3).
+You can modify the database name, username, password, or engine as needed.
+
+✅ Step 1: Create a Security Group for DB
+
+File: db-sg.tf
+
+resource "aws_security_group" "terra-db-sg" {
+  name        = "terra-gyanesh-db-sg"
+  description = "Security group for Terra Gyanesh RDS"
+  vpc_id      = "vpc-08b07fd328e7c8973"
+
+  ingress {
+    description = "Allow MySQL access"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]   
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name    = "terra-gyanesh-db-sg"
+    Project = "terra-gyanesh"
+  }
+}
+
+
+
+✅ Step 2: Create a Subnet Group for RDS
+
+File: db-subnet-group.tf
+
+resource "aws_db_subnet_group" "terra-db-subnet-group" {
+  name       = "terra-gyanesh-db-subnet-group"
+  subnet_ids = [
+    aws_subnet.terra-subnet-3.id,  # new subnet
+  ]
+
+  tags = {
+    Name    = "terra-gyanesh-db-subnet-group"
+    Project = "terra-gyanesh"
+  }
+}
+
+
+
+
+✅ Step 3: Create the Database Instance
+
+File: database.tf
+
+resource "aws_db_instance" "terra-db" {
+  identifier             = "terra-gyanesh-db"
+  engine                 = "mysql"
+  engine_version         = "8.0"
+  instance_class         = "db.t3.micro"     # free-tier eligible
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "TerraGyanesh@123"  # change for security
+  db_subnet_group_name   = aws_db_subnet_group.terra-db-subnet-group.name
+  vpc_security_group_ids = [aws_security_group.terra-db-sg.id]
+  skip_final_snapshot    = true
+  publicly_accessible    = true
+
+  tags = {
+    Name    = "terra-gyanesh-db"
+    Project = "terra-gyanesh"
+  }
+}
+
+
+
+
+⚙️ Step 4: Run These Commands
+terraform init          # if not already initialized
+terraform plan
+terraform apply -auto-approve
+
+✅ Output
+
+Terraform will create:
+
+A security group for your DB
+
+A subnet group (using your subnet)
+
+A MySQL database instance running inside your existing VPC
+
+Would you like me to modify this setup to make the database private (not publicly accessible) for production use?
+That version keeps your DB isolated — only accessible from EC2 instances in the same VPC.
