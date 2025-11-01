@@ -72,9 +72,8 @@ resource "aws_s3_bucket" "terraformgb_bucket" {
 # VPC
 resource "aws_vpc" "terra_vpc" {
   cidr_block = var.vpc_cidr
-
   tags = {
-    Name = "TerraF_vpc"
+    Name = "Terra_VPC"
   }
 }
 
@@ -86,7 +85,7 @@ resource "aws_subnet" "terra_subnet" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "Terra_subnet"
+    Name = "Terra_Subnet"
   }
 }
 
@@ -143,10 +142,8 @@ resource "aws_security_group" "terra_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-ecurityGroup"
+    tags = {
+    Name = "Terra_SecurityGroup"
   }
 }
 
@@ -159,14 +156,7 @@ resource "aws_instance" "terraform_ins" {
   associate_public_ip_address = true
   key_name                    = var.key_name
 
-  tags = {
-    Name = var.instance_name
-  }
-}
-
-# ELASTIC IP
-resource "aws_eip" "terra_eip" {
-  domain = "vpc"
+   domain = "vpc"
 
   tags = {
     Name = "Terra_EIP"
