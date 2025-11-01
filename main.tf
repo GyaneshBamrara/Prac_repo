@@ -72,6 +72,7 @@ resource "aws_s3_bucket" "terraformgb_bucket" {
 # VPC
 resource "aws_vpc" "terra_vpc" {
   cidr_block = var.vpc_cidr
+
   tags = {
     Name = "TerraF_vpc"
   }
@@ -142,11 +143,10 @@ resource "aws_security_group" "terra_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-   _blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "Terra_SecurityGroup"
+ecurityGroup"
   }
 }
 
@@ -164,13 +164,19 @@ resource "aws_instance" "terraform_ins" {
   }
 }
 
-# ELaws_eip" "terra_eip" {
-  instance = aws_instance.terraform_ins.id
-  vpc      = true
+# ELASTIC IP
+resource "aws_eip" "terra_eip" {
+  domain = "vpc"
 
   tags = {
     Name = "Terra_EIP"
   }
+}
+
+# EIP ASSOCIATION
+resource "aws_eip_association" "terra_eip_assoc" {
+  instance_id   = aws_instance.terraform_ins.id
+  allocation_id = aws_eip.terra_eip.id
 }
 
 # OUTPUTS
