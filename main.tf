@@ -1,129 +1,78 @@
-# PROVIDER
+# AWS Provider
 provider "aws" {
-  region = var.aws_region
+  region = "ap-south-1"
 }
 
-# VARIABLES
-variable "aws_region" {
-  description = "AWS region to deploy resources in"
-  default     = "ap-south-1"
-}
-
-variable "bucket_prefix" {
-  description = "Prefix for the S3 bucket name"
-  default     = "terraformgb-s3-bucket"
-}
-
-variable "environment" {
-  description = "Environment tag for resources"
-  default     = "Dev"
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  default     = "10.0.0.0/24"
-}
-
-variable "subnet_cidr" {
-  description = "CIDR block for the subnet"
-  default     = "10.0.0.0/28"
-}
-
-variable "availability_zone" {
-  description = "Availability zone for the subnet"
-  default     = "ap-south-1b"
-}
-
-variable "ami_id" {
-  description = "AMI ID for EC2 instance"
-  default     = "ami-02d26659fd82cf299"
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  default     = "t3.micro"
-}
-
-variable "key_name" {
-  description = "Key pair name for EC2 SSH access"
-  default     = "KeyTerra"
-}
-
-variable "instance_name" {
-  description = "Name tag for EC2 instance"
-  default     = "Terraform_ins"
-}
-
-# RANDOM ID FOR BUCKET
+# Random ID for unique S3 bucket name
 resource "random_id" "rand" {
   byte_length = 4
 }
 
-# S3 BUCKET
+# S3 Bucket
 resource "aws_s3_bucket" "terraformgb_bucket" {
-  bucket = "${var.bucket_prefix}-${random_id.rand.hex}"
+  bucket = "terraformgb-s3-bucket-${random_id.rand.hex}"
 
   tags = {
-    Name        = var.bucket_prefix
-    Environment = var.environment
+    Name        = "terraformgb-s3-bucket"
+    Environment = "Dev"
   }
 }
 
 # VPC
-resource "aws_vpc" "terra_vpc" {
-  cidr_block = var.vpc_cidr
+resource "aws_vpc" "gyanesh_vpc" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "Terra_VPC"
+    Name = "Terraform_VPC"
   }
 }
 
-# SUBNET
-resource "aws_subnet" "terra_subnet" {
-  vpc_id                  = aws_vpc.terra_vpc.id
-  cidr_block              = var.subnet_cidr
-  availability_zone       = var.availability_zone
+# Subnet
+resource "aws_subnet" "gyanesh_subnet" {
+  vpc_id                  = aws_vpc.gyanesh_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "ap-south-1a"
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "Terra_Subnet"
+    Name = "Terra_subnet"
   }
 }
 
-# INTERNET GATEWAY
-resource "aws_internet_gateway" "terra_igw" {
-  vpc_id = aws_vpc.terra_vpc.id
+# Internet Gateway
+resource "aws_internet_gateway" "gyanesh_igw" {
+  vpc_id = aws_vpc.gyanesh_vpc.id
 
   tags = {
-    Name = "Terra_IGW"
+    Name = "Terraform_IGW"
   }
 }
 
-# ROUTE TABLE
-resource "aws_route_table" "terra_rt" {
-  vpc_id = aws_vpc.terra_vpc.id
+# Route Table
+resource "aws_route_table" "gyanesh_rt" {
+  vpc_id = aws_vpc.gyanesh_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.terra_igw.id
+    gateway_id = aws_internet_gateway.gyanesh_igw.id
   }
 
   tags = {
-    Name = "Terra_RouteTable"
+    Name = "Terraform_RouteTable"
   }
 }
 
-# ROUTE TABLE ASSOCIATION
-resource "aws_route_table_association" "terra_rta" {
-  subnet_id      = aws_subnet.terra_subnet.id
-  route_table_id = aws_route_table.terra_rt.id
+# Route Table Association
+resource "aws_route_table_association" "gyanesh_rta" {
+  subnet_id      = aws_subnet.gyanesh_subnet.id
+  route_table_id = aws_route_table.gyanesh_rt.id
 }
 
-# SECURITY GROUP
-resource "aws_security_group" "terra_sg" {
-  name        = "terra-sg"
+# Security Group
+resource "aws_security_group" "gyanesh_sg" {
+  name        = "terraform-sg"
   description = "Allow SSH and HTTP"
-  vpc_id      = aws_vpc.terra_vpc.id
+  vpc_id      = aws_vpc.gyanesh_vpc.id
 
   ingress {
     from_port   = 22
@@ -147,40 +96,20 @@ resource "aws_security_group" "terra_sg" {
   }
 
   tags = {
-    Name = "Terra_SecurityGroup"
+    Name = "Terraform_SecurityGroup"
   }
 }
 
-# EC2 INSTANCE
+# EC2 Instance
 resource "aws_instance" "terraform_ins" {
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
- terra_subnet.id
-  vpc_security_group_ids      = [aws_security_group.terra_sg.id]
+  ami                         = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 LTS
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.gyanesh_subnet.id
+  vpc_security_group_ids      = [aws_security_group.gyanesh_sg.id]
   associate_public_ip_address = true
-  key_name                    = var.key_name
+  key_name                    = "terraform-keypair"
 
   tags = {
-    Name = var.instance_name
+    Name = "Terraform_ins"
   }
-}
-
-# ELASTIC IP
-resource "aws_eip" "terra_eip" {
-  domain = "vpc"
-
-  tags = {
-    Name = "Terra_EIP"
-  }
-}
-
-# EIP ASSOCIATION
-resource "aws_eip_association" "terra_eip_assoc" {
-  instance_id   = aws_instance.terraform_ins.id
- _ip" {
-  value = aws_instance.terraform_ins.public_ip
-}
-
-output "s3_bucket_name" {
-  value = aws_s3_bucket.terraformgb_bucket.bucket
 }
