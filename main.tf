@@ -140,7 +140,9 @@ resource "aws_security_group" "terra_sg" {
   }
 
   egress {
-    = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -153,12 +155,17 @@ resource "aws_security_group" "terra_sg" {
 resource "aws_instance" "terraform_ins" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.terra_subnet.id
+ terra_subnet.id
   vpc_security_group_ids      = [aws_security_group.terra_sg.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
 
- 
+  tags = {
+    Name = var.instance_name
+  }
+}
+
+# ELASTIC IP
 resource "aws_eip" "terra_eip" {
   domain = "vpc"
 
@@ -170,11 +177,7 @@ resource "aws_eip" "terra_eip" {
 # EIP ASSOCIATION
 resource "aws_eip_association" "terra_eip_assoc" {
   instance_id   = aws_instance.terraform_ins.id
-  allocation_id = aws_eip.terra_eip.id
-}
-
-# OUTPUTS
-output "ec2_public_ip" {
+ _ip" {
   value = aws_instance.terraform_ins.public_ip
 }
 
